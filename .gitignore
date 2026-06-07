@@ -1,0 +1,24 @@
+
+# Sensitive Secret Files containing active tokens
+.env
+
+# Local runtime storage databases
+*.db
+*.db-journal
+
+# Python compilation workspace caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.venv/
+venv/
+ENV/
+
+# System specific developer configurations
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+

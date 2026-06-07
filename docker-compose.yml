@@ -1,0 +1,21 @@
+services:
+  news_phraser:
+    build: .
+    container_name: nachrichten_telegram_bot
+    restart: unless-stopped
+    # Mount the active .env file securely from the host root path
+    env_file:
+      - .env
+    volumes:
+      # Bind mount the local data folder to access channels.txt and retain the SQLite databases
+      - ./data:/nachrichten/data
+    environment:
+      - OLLAMA_HOST=http://ollama_backend:11434
+    networks:
+      - ollama_network
+
+networks:
+  ollama_network:
+    external: true
+    name: ollama_network
+
