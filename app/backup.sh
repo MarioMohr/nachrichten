@@ -19,7 +19,7 @@ if [ -z "$commit_msg" ]; then
 fi
 
 echo "Stopping news_phraser to secure the database..."
-cd "$REPO_DIR" && docker compose stop nachrichten_telegram_bot
+cd "$REPO_DIR" && docker compose stop
 
 echo "Archiving whole nachrichten directory (excluding git internals)..."
 # Changes to the parent nachrichten directory, excludes .git, and compresses everything else
@@ -53,7 +53,7 @@ echo "✅ Public codebase pushed to GitHub."
 # --- Restart Application ---
 echo "Restarting news_phraser container with upgrades..."
 cd "$REPO_DIR"
-docker compose up -d --build nachrichten_telegram_bot
+docker compose up -d --build
 
 echo "🚀 Upgrade, redundant backups, and GitHub deployment complete!"
 
