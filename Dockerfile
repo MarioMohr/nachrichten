@@ -15,6 +15,5 @@ RUN pip install --no-cache-dir -r app/requirements.txt
 # Copy the remaining execution assets
 COPY app/ ./app/
 
-# The application executes schema tracking followed by the persistent parsing loop
-CMD ["sh", "-c", "python3 app/scrapper.py & python3 app/ai_processor.py & wait"]
-
+# No CMD line any more!
+# The command is now managed entirely by docker-compose.yml.

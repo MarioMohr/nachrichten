@@ -1,21 +1,35 @@
 services:
-  news_phraser:
+  scrapper:
     build: .
-    container_name: nachrichten_telegram_bot
-    restart: unless-stopped
-    # Mount the active .env file securely from the host root path
+    container_name: scrapper
+    restart: always
+    command: python3 app/scrapper.py
+    volumes:
+      - ./data:/app/data
+
+  ai_processor:
+    build: .
+    container_name: ai_processor
+    restart: always
+    command: python3 app/ai_processor.py
+    volumes:
+      - ./data:/app/data
     env_file:
       - .env
-    volumes:
-      # Bind mount the local data folder to access channels.txt and retain the SQLite databases
-      - ./data:/nachrichten/data
-    environment:
-      - OLLAMA_HOST=http://ollama_backend:11434
     networks:
       - ollama_network
+
+  telegram_bot:
+    build: .
+    container_name: telegram_bot
+    restart: always
+    command: python3 app/telegram_bot.py
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - .env
 
 networks:
   ollama_network:
     external: true
-    name: ollama_network
 
