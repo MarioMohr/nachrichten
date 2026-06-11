@@ -5,7 +5,7 @@ services:
     restart: always
     command: python3 app/scrapper.py
     volumes:
-      - ./data:/app
+      - ./data:/app/data
 
   ai_processor:
     build: .
@@ -13,7 +13,7 @@ services:
     restart: always
     command: python3 app/ai_processor.py
     volumes:
-      - ./data:/app
+      - ./data:/app/data
     env_file:
       - .env
     networks:
@@ -25,7 +25,7 @@ services:
     restart: always
     command: python3 app/telegram_bot.py
     volumes:
-      - ./data:/app
+      - ./data:/app/data
     env_file:
       - .env
 
