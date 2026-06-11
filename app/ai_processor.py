@@ -100,12 +100,16 @@ def check_title_with_ollama(title):
         if response.status_code == 200:
             result = response.json()
             response_text = result.get("response", "{}")
-            parsed_data = json.loads(response_text)
-            return parsed_data.get("worth_processing", False)
+            try:
+                parsed_data = json.loads(response_text)
+                return parsed_data.get("worth_processing", False)
+            except json.JSONDecodeError as e:
+                print(f"Ollama JSON structure failed: {e}")
+                return None
         return False
     except Exception as error:
         print(f"Ollama connection error: {error}")
-        return False
+        return None
 
 def fetch_transcript(video_id):
     if not TRANSCRIPT_API_KEY:
@@ -158,8 +162,7 @@ def analyze_with_gemini(transcript_text, language):
         result_json = json.loads(response.text)
         return NewsTickerAnalysis(**result_json)
     except Exception as e:
-        print(f"Gemini processing error: {e}")
-        return None
+        raise e
 
 def save_to_ticker(video_id, analysis_data):
     conn = sqlite3.connect(DB_TICKER)
@@ -230,7 +233,11 @@ def run_pipeline_loop():
             print(f"Evaluating relevance via Ollama: {title}")
             is_relevant = check_title_with_ollama(title)
             
-            if not is_relevant:
+            if is_relevant is None:
+                print(f"Ollama evaluation failed for {video_id}. Retrying next cycle.")
+                time.sleep(10)
+                continue
+            elif not is_relevant:
                 print(f"Video {video_id} rejected by Ollama. Setting state to ignored.")
                 update_queue_status(video_id, "ignored")
                 continue
@@ -244,16 +251,22 @@ def run_pipeline_loop():
                 continue
                 
             print("Transcript acquired. Analyzing with Gemini...")
-            analysis_result = analyze_with_gemini(transcript_text, language)
-            
-            if analysis_result:
+            try:
+                analysis_result = analyze_with_gemini(transcript_text, language)
                 save_to_ticker(video_id, analysis_result)
                 update_queue_status(video_id, "completed")
                 approved_count += 1
                 print(f"Successfully processed and saved news ticker for {video_id}.")
-            else:
-                print(f"Gemini failed to analyze {video_id}. Marking as error.")
-                update_queue_status(video_id, "error")
+            except Exception as e:
+                error_msg = str(e)
+                if "429" in error_msg or "503" in error_msg or "RESOURCE_EXHAUSTED" in error_msg or "UNAVAILABLE" in error_msg:
+                    print("Gemini rate limit or server overload reached. Reverting status to new and sleeping.")
+                    update_queue_status(video_id, "new")
+                    time.sleep(60)
+                    continue
+                else:
+                    print(f"Gemini processing error: {e}")
+                    update_queue_status(video_id, "error")
 
         print(f"Pipeline cycle complete. Processed {approved_count} videos.")
         conn.close()
