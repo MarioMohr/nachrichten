@@ -3,7 +3,7 @@ FROM python:3.11-slim
 # Install system utilities needed for the database
 RUN apt-get update && apt-get install -y sqlite3 && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /nachrichten
+WORKDIR /app
 
 # Stop Python from buffering log outputs to ensure real time terminal views
 ENV PYTHONUNBUFFERED=1
